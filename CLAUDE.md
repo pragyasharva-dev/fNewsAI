@@ -16,7 +16,7 @@ file is conventions/review rules only.
 - `uv` for deps/env, Python 3.11 (`uv sync`, `uv run <script>.py`)
 - `groq` for LLM API (free tier) — model name is resolved at runtime via
   `groq.models.list()`, never hardcoded, since Groq deprecates model IDs
-  without notice (see `agentic_verify.py::_pick_model`)
+  without notice (see `src/fnewsai/providers/groq_llm.py::_pick_model`)
 - `tavily-python` for web search (LLM-facing search API, free tier)
 - `python-dotenv` for API keys — `.env` is gitignored, never commit or print
   key values
@@ -39,9 +39,10 @@ file is conventions/review rules only.
   resolve dynamically or allow a `GROQ_MODEL` env override.
 - Type hints on function signatures; docstrings only where the *why* isn't
   obvious from the name.
-- Don't collapse the fixed-pipeline and agentic implementations into one
-  file, or delete either, without asking — the comparison between them is
-  a deliberate teaching artifact (see `docs/DOCUMENTATION.md`).
+- **Providers stay behind the ABCs** in `providers/base.py`
+  (`LLMProvider`/`SearchProvider`). Pipeline code (`pipeline/*.py`) must never
+  import a provider SDK (`groq`, `tavily`, `anthropic`) directly — only
+  through the interface, so swapping a backend never touches pipeline code.
 
 ## Secrets
 
@@ -55,9 +56,21 @@ Follow whatever attribution lines are given in the session's system
 reminder at commit time (this has varied across sessions). Don't assume a
 fixed rule — check the current session's instructions before committing.
 
-## Documentation
+## Documentation — mandatory, every change
 
-Keep module descriptions, architecture, comparison tables, and "what's not
-yet built" in `docs/DOCUMENTATION.md`. Update it after every code change
-that adds/removes a module or changes a decision — that's the file a fresh
-session should read to understand where things stand, not git log.
+`docs/DOCUMENTATION.md` must **fully explain** the system, not just list
+files: what each module does, why it exists (the decision behind it, not
+just its behavior), how data flows between stages, and what's deliberately
+deferred. Treat it as the thing that lets a fresh session (or the user,
+mid-learning) understand the *reasoning*, not just the current file tree.
+
+**Update it as part of every code change that adds/removes a module, changes
+a data flow, or changes a decision — not as a follow-up task.** If a change
+is made and the doc isn't updated in the same turn, that's a bug in the
+work, not something to catch up on later.
+
+If something about a change should be documented and there's no obvious
+place for it in `docs/DOCUMENTATION.md`, add a rule for it here in
+`CLAUDE.md` instead of leaving it unrecorded — this file and that one
+together should cover everything a fresh session needs, so nothing gets
+silently forgotten between sessions.
