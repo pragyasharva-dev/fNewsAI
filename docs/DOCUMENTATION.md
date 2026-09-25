@@ -5,6 +5,39 @@ Living doc. Whenever code changes, this file changes in the same turn — see
 this file holds what the system *is*, why it's built this way, and how data
 actually moves through it.
 
+## How to read this repo (start here)
+
+Read in this order — each step assumes the previous one:
+
+1. **`CLAUDE.md`** (project root) — conventions and rules, 2 min.
+2. **This file, in full**, before opening any `.py` file — it explains *why*,
+   which makes the code readable on first pass instead of needing re-reads.
+3. **`src/fnewsai/cli.py`** — the whole pipeline in one place (`run()`).
+   Read this first among the code so you have the map before the details.
+4. **`src/fnewsai/models.py`** — the three shapes (`Article`, `Claim`,
+   `Verdict`) that flow between every stage. Know these before the stages.
+5. **`src/fnewsai/pipeline/`, in this order**: `ingestion.py` (plain Python,
+   no LLM) → `extraction.py` (first LLM call) → `verification.py` (the
+   agentic loop — read `verify_claim()` slowly, it's the core mechanic) →
+   `report.py` (plain Python again).
+6. **`src/fnewsai/providers/base.py`** — the two contracts (`LLMProvider`,
+   `SearchProvider`), read before the concrete implementations.
+7. **`src/fnewsai/providers/groq_llm.py`** and **`tavily_search.py`** —
+   concrete implementations. Note that `pipeline/` never imports these
+   directly — only `cli.py` does, via `providers/__init__.py`'s factories.
+8. **`src/fnewsai/config.py`** and **`errors.py`** — skim, supporting cast.
+9. **`tests/`** — skim after step 5's `verification.py`; `test_verification.py`'s
+   fake providers are a second, simpler explanation of the same loop.
+
+Then run it and watch a real report come out before re-reading the loop:
+
+```
+uv run python -m fnewsai --text "India launched a new AI mission in 2024. It is the best decision ever."
+```
+
+Seeing real output first makes `verification.py` click faster than reading
+it cold.
+
 ## What this is
 
 Input: a news article (URL or raw text). Output: a per-claim verdict —
